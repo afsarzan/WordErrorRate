@@ -7,8 +7,48 @@ function App() {
   const [result, setResult] = useState<number | null>(null);
   
   const calculateWer = () => {
-   setResult(100);
+    const refWords = ref.trim().split(' ')
+    console.log('%c [ refWords ]-11', 'font-size:13px; background:pink; color:#bf2c9f;', refWords)
+    const hypWords = hyp.trim().split(' ')
+    console.log('%c [ hypWords ]-12', 'font-size:13px; background:pink; color:#bf2c9f;', hypWords)
+    
+    let substitution  = 0;
+    let deletion = 0;
+    let insertion = 0;
+    const totalWords = refWords.length;
+
+    deletion = findOperation('deletion',refWords, hypWords);
+    insertion = findOperation('insertion',refWords, hypWords);
+    substitution = findOperation('substitution',refWords, hypWords);
+
+    const werResult = (substitution + deletion + insertion)/ totalWords
+   setResult(werResult);
   }
+
+  const findOperation = (operationType: string, refWords: string[], hypWords: string[]) => {
+    let count = 0;
+    
+    switch(operationType) {
+      case 'deletion':
+        // check if all words of hypothesis are in reference
+        hypWords.forEach((word) => {
+          if (!refWords.includes(word)) {
+            count++;
+          }
+        });        
+        break;
+      case 'insertion':
+        count = 0
+        break;
+      case 'substitution':
+        count = 0;
+        break;
+      default:
+        break;
+    } 
+
+    return count
+  };
   return (
     <>
       <div className="wer-container">
