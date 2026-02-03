@@ -8,19 +8,22 @@ function App() {
   
   const calculateWer = () => {
     const refWords = ref.trim().split(' ')
-    console.log('%c [ refWords ]-11', 'font-size:13px; background:pink; color:#bf2c9f;', refWords)
+    
     const hypWords = hyp.trim().split(' ')
-    console.log('%c [ hypWords ]-12', 'font-size:13px; background:pink; color:#bf2c9f;', hypWords)
+    
     
     let substitution  = 0;
     let deletion = 0;
     let insertion = 0;
     const totalWords = refWords.length;
 
-    deletion = findOperation('deletion',refWords, hypWords);
-    insertion = findOperation('insertion',refWords, hypWords);
+    deletion = findOperation('deletion',refWords, hypWords);    
+    console.log('%c [ deletion ]-21', 'font-size:13px; background:pink; color:#bf2c9f;', deletion)
+    insertion = findOperation('insertion',refWords, hypWords);    
+    console.log('%c [ insertion ]-23', 'font-size:13px; background:pink; color:#bf2c9f;', insertion)
     substitution = findOperation('substitution',refWords, hypWords);
-
+    console.log('%c [ substitution ]-25', 'font-size:13px; background:pink; color:#bf2c9f;', substitution)
+    
     const werResult = (substitution + deletion + insertion)/ totalWords
    setResult(werResult);
   }
@@ -29,16 +32,17 @@ function App() {
     let count = 0;
     
     switch(operationType) {
-      case 'deletion':
-        // check if all words of hypothesis are in reference
+      case 'deletion': {
+        const newWords = hypWords.length - refWords.length;
+        count = newWords > 0 ? 0 : Math.abs(newWords);
+        break;
+        }
+      case 'insertion':
         hypWords.forEach((word) => {
           if (!refWords.includes(word)) {
             count++;
           }
-        });        
-        break;
-      case 'insertion':
-        count = 0
+        });
         break;
       case 'substitution':
         count = 0;
