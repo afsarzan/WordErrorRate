@@ -23,6 +23,12 @@
   border-radius: 8px;
   background-color: #1e1e1e;
 }
+.wer-container h1 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
 .wer-container div {
   display: flex;
   justify-content: space-between;
@@ -51,4 +57,10 @@
   color: white;
   font-weight: 600;
   cursor: pointer;
+}
+
+.wer-container .result {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 1.25rem;
 }
