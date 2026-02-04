@@ -1,144 +1,173 @@
-import { useState } from "react";
-import "./App.css";
+import { useState, useEffect } from "react";
 
-function App() {
-  const [ref, setRef] = useState<string>("");
-  const [hyp, setHyp] = useState<string>("");
-  const [refWords,setRefWords] = useState<string[]>([]);
-  const [hypWords,setHypWords] = useState<string[]>([]);
-  const [result, setResult] = useState<float | null>(null);
 
-  const calculateWer = () => {
-    setRefWords(ref.trim().split(" ").map( word => word.toLowerCase()));
+interface AlignmentStep {
+  ref: string;
+  hyp: string;
+  op: "M" | "S" | "D" | "I";
+}
 
-    setHypWords(hyp.trim().split(" ").map( word => word.toLowerCase()));
+const App = () => {
+  
+  const [ref, setRef] = useState<string>("I like green eggs");
+  const [hyp, setHyp] = useState<string>("I like eggs");
+  
+  
+  const [alignments, setAlignments] = useState<AlignmentStep[]>([]);
+  const [result, setResult] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
 
-    let substitution = 0;
-    let deletion = 0;
-    let insertion = 0;
-    const totalWords = refWords.length;
-    const result = [];
-    deletion = findOperation("deletion", refWords, hypWords);
-    // console.log({deletion}    );
-    if(deletion) result.push(deletion);
-    insertion = findOperation("insertion", refWords, hypWords);
-    // console.log({insertion});
-    if(insertion) result.push(insertion);
-    substitution = findOperation("substitution", refWords, hypWords);
-    // console.log({substitution} );
-    if(substitution) result.push(substitution);
+  const [activeMatrix, setActiveMatrix] = useState<number[][]>([]);
+  const [currentCoord, setCurrentCoord] = useState<{ i: number; j: number } | null>(null);
+
+  
+  const startCalculation = () => {
+    const referenceWords = ref.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const hWords = hyp.trim().toLowerCase().split(/\s+/).filter(Boolean);
+
+    if (referenceWords.length === 0) {
+      alert("Please enter a reference sentence.");
+      return;
+    }
+
+    const rows = referenceWords.length + 1;
+    const cols = hWords.length + 1;
+    const dp = Array.from({ length: rows }, () => Array(cols).fill(0));
+
     
-
-    // console.log('%c [ Math.min(substitution , deletion , insertion)  ]-39', 'font-size:13px; background:pink; color:#bf2c9f;', Math.min(...result) )
-    const werResult = (Math.min(...result)/ totalWords).toFixed(2);
-    // console.log(      {werResult} );
-    setResult(werResult);
-  };
-
-  const findOperation = (
-    operationType: string,
-    refWords: string[],
-    hypWords: string[],
-  ) => {
-    let count = 0;
-
-    switch (operationType) {
-      case "deletion": {
-        let deleteWords = 0;
-        refWords.forEach((word) => {
-          if (!hypWords.includes(word)) deleteWords++;
-        });
-        count = deleteWords;
-        break;
-      }
-      case "insertion": {
-        const newWords = hypWords.length - refWords.length;
-        count = newWords > 0 ? 0 : Math.abs(newWords);
-        break;
-      }
-      case "substitution": {
-        count = 0;        
-        let substitutions = 0;        
-
-        for (let i = 0; i < refWords.length; i++) {
-          if (!(refWords[i] === hypWords[i])){
-            substitutions++;            
-          }
+    for (let i = 0; i <= referenceWords.length; i++) dp[i][0] = i;
+    for (let j = 0; j <= hWords.length; j++) dp[0][j] = j;
+    
+    for (let i = 1; i <= referenceWords.length; i++) {
+      for (let j = 1; j <= hWords.length; j++) {
+        if (referenceWords[i - 1] === hWords[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = Math.min(
+            dp[i - 1][j - 1] + 1, // Substitution
+            dp[i - 1][j] + 1,     // Deletion
+            dp[i][j - 1] + 1      // Insertion
+          );
         }
-        count = substitutions;
-        break;
       }
-      default:
-        break;
     }
 
-    return count;
+    // Prepare for Animation
+    setAlignments([]);
+    setActiveMatrix(dp);
+    setCurrentCoord({ i: referenceWords.length, j: hWords.length });
+    setIsPaused(false);
+    setIsAnimating(true); // Signal that animation has started
+    setResult(null);
+    // Final WER Score
+    const editDistance = dp[referenceWords.length][hWords.length];
+    setResult((editDistance / referenceWords.length).toFixed(2));
   };
 
-  const checkWordStatus = (word : string,type: string) => {
-    if(type == 'ref'){
-      if(!hypWords.includes(word)) {
-        return (
-        <>
-          {word} <span className="icon red">D</span>
-        </>
-      );
-      }
+  // --- 2. The Animation Loop (Backtracking) ---
+  useEffect(() => {
+    if (isPaused || !currentCoord || activeMatrix.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const { i, j } = currentCoord;
+
+     if (i === 0 && j === 0) {
+      // --- ANIMATION FINISHED ---
+      const referenceWords = ref.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const editDistance = activeMatrix[referenceWords.length][activeMatrix[0].length - 1];
+      
+      setResult((editDistance / referenceWords.length).toFixed(2));
+      setIsAnimating(false);
+      setCurrentCoord(null);
+      return;
     }
-    return word;
-  }
+
+      const referenceWords = ref.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const hWords = hyp.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      let nextI = i;
+      let nextJ = j;
+      let step: AlignmentStep | null = null;
+
+      // Check Diagonal (Match or Substitution)
+      if (i > 0 && j > 0) {
+        const cost = referenceWords[i - 1] === hWords[j - 1] ? 0 : 1;
+        if (activeMatrix[i][j] === activeMatrix[i - 1][j - 1] + cost) {
+          step = { ref: referenceWords[i - 1], hyp: hWords[j - 1], op: cost === 0 ? "M" : "S" };
+          nextI = i - 1; nextJ = j - 1;
+        }
+      }
+
+      // Check Up (Deletion)
+      if (!step && i > 0 && activeMatrix[i][j] === activeMatrix[i - 1][j] + 1) {
+        step = { ref: referenceWords[i - 1], hyp: "—", op: "D" };
+        nextI = i - 1;
+      }
+
+      // Check Left (Insertion)
+      if (!step && j > 0 && activeMatrix[i][j] === activeMatrix[i][j - 1] + 1) {
+        step = { ref: "—", hyp: hWords[j - 1], op: "I" };
+        nextJ = j - 1;
+      }
+
+      if (step) {
+        setAlignments((prev) => [step!, ...prev]);
+        setCurrentCoord({ i: nextI, j: nextJ });
+      }
+    }, 800); // Speed of animation
+
+    return () => clearTimeout(timer);
+  }, [currentCoord, isPaused, activeMatrix, ref, hyp]);
+
   return (
-    <>
-      <div className="wer-container">
-        <h1>Word Error Rate Calculator</h1>
-        <div>
-          <label htmlFor="reference">Reference</label>
-          <input
-            id="reference"
-            type="text"
-            value={ref}
-            onChange={(e) => setRef(e.target.value)}
-          />
+    <div className="wer-container">
+      <h1>Word Error Rate Animator</h1>
+      
+      <div className="input-section">
+        <div className="input-group">
+          <label>Reference (Truth)</label>
+          <input value={ref} onChange={(e) => setRef(e.target.value)} />
         </div>
-        <div>
-          <label htmlFor="hypothesis">Hypothesis</label>
-          <input
-            id="hypothesis"
-            type="text"
-            value={hyp}
-            onChange={(e) => setHyp(e.target.value)}
-          />
-        </div>
-        <button onClick={calculateWer}>Compute WER</button>
-
-        
-
-        <div className="results-values">
-          <div className="given-words">
-            <div><strong>Reference words:</strong> </div>
-             {refWords.map((word, index) => {
-              const width = 75/ref.split(' ').length +'%';;
-              return (
-                    <div key={index} style={{ flexBasis: width }}>{checkWordStatus(word,'ref')} </div>
-                  )                      
-              })}
-          </div>
-           <div className="given-words">
-            <div><strong>Hypothesis words:</strong> </div>
-            {hypWords.map((word, index) => {
-              const width = 75/ref.split(' ').length +'%';
-              return (
-                    <div key={index} style={{ flexBasis: width }}>{checkWordStatus(word,'hyp')} </div>
-                  )                      
-              })}
-          </div>
-        </div>
-        <div className="result">
-          <strong>Result: WER: {result}</strong>
+        <div className="input-group">
+          <label>Hypothesis (Output)</label>
+          <input value={hyp} onChange={(e) => setHyp(e.target.value)} />
         </div>
       </div>
-    </>
+
+      <div className="button-group">
+        <button className="btn-primary" onClick={startCalculation}>Compute & Animate</button>
+        <button className="btn-secondary" onClick={() => setIsPaused(!isPaused)}>
+          {isPaused ? "Resume" : "Pause"}
+        </button>
+        <button className="btn-outline" onClick={() => window.location.reload()}>Reset</button>
+      </div>
+
+      
+
+      <div className="alignment-grid">
+        {alignments.map((item, idx) => (
+          <div key={idx} className="alignment-column slide-in">
+            <div className={`word ${item.op === 'D' ? 'red' : item.op === 'S' ? 'orange' : ''}`}>
+              {item.ref} {item.op === 'D' && <span className="badge">D</span>}
+              {item.op === 'S' && <span className="badge">S</span>}
+            </div>
+            <div className="divider"></div>
+            <div className={`word ${item.op === 'I' ? 'add' : item.op === 'S' ? 'orange' : ''}`}>
+              {item.hyp} {item.op === 'I' && <span className="badge">I</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {result && !isAnimating && (
+        <div className="result-card slide-in">
+          <h3>Calculation Complete!</h3>
+          <p><strong>Final WER:</strong> {result}</p>         
+        </div>
+      )}
+    </div>
   );
-}
+};
 
 export default App;
