@@ -197,3 +197,53 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .slide-in { animation: slideIn 0.3s ease forwards; }
+
+.legend-container {
+  margin: 20px 0;
+  padding: 15px;
+  background: #fff;
+  border: 2px solid #eee;
+  border-radius: 8px;
+}
+
+.legend-container h3 {
+  margin-top: 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legend-item p {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: #777;
+}
+
+.status-box {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 6px;
+  color: white;
+}
+
+/* Coloring Logic */
+.status-box.match { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.status-box.sub { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+.status-box.del { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+.status-box.ins { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }

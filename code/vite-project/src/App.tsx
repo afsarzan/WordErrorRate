@@ -7,6 +7,47 @@ interface AlignmentStep {
   op: "M" | "S" | "D" | "I";
 }
 
+const StatusLegend = () => {
+  return (
+    <div className="legend-container">
+      <h3>Status Key</h3>
+      <div className="legend-grid">
+        <div className="legend-item">
+          <div className="status-box match">M</div>
+          <div>
+            <strong>Match</strong>
+            <p>Words are identical. (Cost: 0)</p>
+          </div>
+        </div>
+        
+        <div className="legend-item">
+          <div className="status-box sub">S</div>
+          <div>
+            <strong>Substitution</strong>
+            <p>Word replaced by another. (Cost: 1)</p>
+          </div>
+        </div>
+
+        <div className="legend-item">
+          <div className="status-box del">D</div>
+          <div>
+            <strong>Deletion</strong>
+            <p>Word removed from Reference. (Cost: 1)</p>
+          </div>
+        </div>
+
+        <div className="legend-item">
+          <div className="status-box ins">I</div>
+          <div>
+            <strong>Insertion</strong>
+            <p>Extra word added to Hypothesis. (Cost: 1)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   
   const [ref, setRef] = useState<string>("I like green eggs");
@@ -120,6 +161,8 @@ const App = () => {
     return () => clearTimeout(timer);
   }, [currentCoord, isPaused, activeMatrix, ref, hyp]);
 
+
+
   return (
     <div className="wer-container">
       <h1>Word Error Rate Animator</h1>
@@ -161,10 +204,14 @@ const App = () => {
       </div>
 
       {result && !isAnimating && (
+        <>
         <div className="result-card slide-in">
           <p><strong>Final WER:</strong> {result}</p>         
         </div>
+        <StatusLegend />
+        </>
       )}
+
     </div>
   );
 };
