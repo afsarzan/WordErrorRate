@@ -59,14 +59,14 @@ const App = () => {
     setActiveMatrix(dp);
     setCurrentCoord({ i: referenceWords.length, j: hWords.length });
     setIsPaused(false);
-    setIsAnimating(true); // Signal that animation has started
+    setIsAnimating(true); 
     setResult(null);
     // Final WER Score
     const editDistance = dp[referenceWords.length][hWords.length];
     setResult((editDistance / referenceWords.length).toFixed(2));
   };
 
-  // --- 2. The Animation Loop (Backtracking) ---
+
   useEffect(() => {
     if (isPaused || !currentCoord || activeMatrix.length === 0) return;
 
@@ -148,12 +148,12 @@ const App = () => {
       <div className="alignment-grid">
         {alignments.map((item, idx) => (
           <div key={idx} className="alignment-column slide-in">
-            <div className={`word ${item.op === 'D' ? 'red' : item.op === 'S' ? 'orange' : ''}`}>
+            <div className={`word ${item.op === 'D' ? 'red badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
               {item.ref} {item.op === 'D' && <span className="badge">D</span>}
               {item.op === 'S' && <span className="badge">S</span>}
             </div>
             <div className="divider"></div>
-            <div className={`word ${item.op === 'I' ? 'add' : item.op === 'S' ? 'orange' : ''}`}>
+            <div className={`word ${item.op === 'I' ? 'add badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
               {item.hyp} {item.op === 'I' && <span className="badge">I</span>}
             </div>
           </div>
@@ -162,7 +162,6 @@ const App = () => {
 
       {result && !isAnimating && (
         <div className="result-card slide-in">
-          <h3>Calculation Complete!</h3>
           <p><strong>Final WER:</strong> {result}</p>         
         </div>
       )}
