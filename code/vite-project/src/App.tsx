@@ -166,51 +166,110 @@ const App = () => {
   return (
     <div className="wer-container">
       <h1>Word Error Rate Animator</h1>
-      
-      <div className="input-section">
-        <div className="input-group">
-          <label>Reference (Truth)</label>
-          <input value={ref} onChange={(e) => setRef(e.target.value)} />
-        </div>
-        <div className="input-group">
-          <label>Hypothesis (Output)</label>
-          <input value={hyp} onChange={(e) => setHyp(e.target.value)} />
-        </div>
-      </div>
 
-      <div className="button-group">
-        <button className="btn-primary" onClick={startCalculation}>Compute & Animate</button>
-        <button className="btn-secondary" onClick={() => setIsPaused(!isPaused)}>
-          {isPaused ? "Resume" : "Pause"}
-        </button>
-        <button className="btn-outline" onClick={() => window.location.reload()}>Reset</button>
-      </div>
-
-      
-
-      <div className="alignment-grid">
-        {alignments.map((item, idx) => (
-          <div key={idx} className="alignment-column slide-in">
-            <div className={`word ${item.op === 'D' ? 'red badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
-              {item.ref} {item.op === 'D' && <span className="badge">D</span>}
-              {item.op === 'S' && <span className="badge">S</span>}
+      <div className="wer-layout">
+        <section className="info-card" aria-labelledby="wer-info-title">
+          <div className="info-header">
+            <h2 id="wer-info-title">Word Error Rate (WER)</h2>
+            <div className="info-source">Rev +4</div>
+          </div>
+          <p>
+            Word Error Rate (WER) is the standard metric for evaluating the accuracy
+            of speech-to-text (STT) and automatic speech recognition (ASR) systems,
+            measuring the percentage of incorrect words compared to a reference
+            transcript. It calculates the sum of substitutions, deletions, and
+            insertions divided by the total number of words, with lower scores
+            indicating higher accuracy.
+          </p>
+          <div className="info-grid">
+            <div className="info-block">
+              <h3>Key Aspects of Word Error Rate (WER)</h3>
+              <div className="info-formula">
+                Formula: <code>WER = (S + D + I) / N</code>
+              </div>
+              <dl className="info-list">
+                <dt>S (Substitutions)</dt>
+                <dd>Wrong words.</dd>
+                <dt>D (Deletions)</dt>
+                <dd>Missing words.</dd>
+                <dt>I (Insertions)</dt>
+                <dd>Extra words.</dd>
+                <dt>N</dt>
+                <dd>Total number of words in the reference (correct) text.</dd>
+              </dl>
             </div>
-            <div className="divider"></div>
-            <div className={`word ${item.op === 'I' ? 'add badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
-              {item.hyp} {item.op === 'I' && <span className="badge">I</span>}
+            <div className="info-block">
+              <h3>Interpretation</h3>
+              <p>
+                A 0% WER indicates perfect transcription, while a 10% WER means
+                90% of words are correct.
+              </p>
+              <h3>Performance Benchmarks</h3>
+              <p>
+                Generally, a WER below 10% is considered excellent, while 10-20%
+                is considered good.
+              </p>
+              <h3>Limitations</h3>
+              <p>
+                WER can exceed 100% if the number of errors exceeds the total
+                number of words in the original text. It does not account for the
+                semantic importance of words, meaning a high WER might not always
+                render a transcript unusable.
+              </p>
+              <h3>Influencing Factors</h3>
+              <p>
+                High acoustic variability, such as background noise or low-quality
+                microphones, increases WER.
+              </p>
             </div>
           </div>
-        ))}
-      </div>
+        </section>
 
-      {result && !isAnimating && (
-        <>
-        <div className="result-card slide-in">
-          <p><strong>Final WER:</strong> {result}</p>         
+        <div className="wer-workspace">
+          <div className="input-section">
+            <div className="input-group">
+              <label>Reference (Truth)</label>
+              <input value={ref} onChange={(e) => setRef(e.target.value)} />
+            </div>
+            <div className="input-group">
+              <label>Hypothesis (Output)</label>
+              <input value={hyp} onChange={(e) => setHyp(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="button-group">
+            <button className="btn-primary" onClick={startCalculation}>Compute & Animate</button>
+            <button className="btn-secondary" onClick={() => setIsPaused(!isPaused)}>
+              {isPaused ? "Resume" : "Pause"}
+            </button>
+            <button className="btn-outline" onClick={() => window.location.reload()}>Reset</button>
+          </div>
+
+          <div className="alignment-grid">
+            {alignments.map((item, idx) => (
+              <div key={idx} className="alignment-column slide-in">
+                <div className={`word ${item.op === 'D' ? 'red badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
+                  {item.ref} {item.op === 'D' && <span className="badge">D</span>}
+                  {item.op === 'S' && <span className="badge">S</span>}
+                </div>
+                <div className="divider"></div>
+                <div className={`word ${item.op === 'I' ? 'add badge-box' : item.op === 'S' ? 'orange badge-box' : 'match badge-box'}`}>
+                  {item.hyp} {item.op === 'I' && <span className="badge">I</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {result && !isAnimating && (
+            <>
+            <div className="result-card slide-in">
+              <p><strong>Final WER:</strong> {result}</p>         
+            </div>
+            <StatusLegend />
+            </>
+          )}
         </div>
-        <StatusLegend />
-        </>
-      )}
+      </div>
 
     </div>
   );
